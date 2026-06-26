@@ -2,12 +2,21 @@ import { useState } from 'react'
 import './App.css'
 const ACCESS_KEY = import.meta.env.VITE_APP_ACCESS_KEY;
 import APIForm from './Components/APIForm';
-
+import Gallery from './Components/Gallery';
 
 
 function App() {
 
   const [currentImage, setCurrentImage] = useState(null);
+  const [prevImages, setPrevImages] = useState([]);
+  const [quota, setQuota] = useState(null);
+
+  const getQuota = async () => {
+    const response = await fetch ("https://api.apiflash.com/v1/urltoimage/quota?access_key=" + ACCESS_KEY);
+    const result = await response.json();
+
+    setQuota(result);
+  }
 
   const [inputs, setInputs] = useState({
     url: "",
@@ -65,7 +74,9 @@ const callAPI = async (query) => {
     }
   else {
     setCurrentImage(json.url);
+    setPrevImages((images) => [...images, json.url]);
     reset();
+    getQuota();
   }
 }
 
@@ -104,7 +115,17 @@ const reset = () => {
       />
     ) : (
       <div> </div>
+        
     )}
+    {quota ? (
+      <p className="quota">
+        {" "}
+        Remaining API calls: {quota.remaining} out of {quota.limit}
+      </p>
+    ) : (
+      <p></p>
+    )}
+    
       <br></br>
     <div className="container">
       <h3> Current Query Status: </h3>
@@ -124,8 +145,13 @@ const reset = () => {
       </p>
     </div>
 
+
 <br></br>
+      <div className="container">
+        <Gallery images={prevImages} />
+      </div>
     </div>
+    
   );
 }
 
